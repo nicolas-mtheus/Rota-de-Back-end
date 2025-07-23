@@ -1,7 +1,7 @@
 package com.br.emakers.apiProjeto.data;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,6 +16,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -24,7 +25,7 @@ import lombok.NoArgsConstructor;
 
 public class Pessoa {
 
-     @Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idPessoa;
 
@@ -44,9 +45,12 @@ public class Pessoa {
     @Email(message = "Email deve ser válido")
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotBlank(message = "Senha é obrigatória")
     @Size(min = 6, max = 100, message = "A senha deve ter entre 6 e 100 caracteres")
-    @JsonIgnore // oculta a senha nas respostas JSON
+    //@JsonIgnore // oculta a senha nas respostas JSON
     private String senha;
+
+    
     
 }
