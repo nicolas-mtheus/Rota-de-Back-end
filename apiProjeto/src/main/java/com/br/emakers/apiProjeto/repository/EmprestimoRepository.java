@@ -1,14 +1,21 @@
 package com.br.emakers.apiProjeto.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import com.br.emakers.apiProjeto.data.Emprestimo;
-import com.br.emakers.apiProjeto.data.EmprestimoId; // Importe a classe da chave composta
+import com.br.emakers.apiProjeto.data.EmprestimoId;
 
+@Repository
 public interface EmprestimoRepository extends JpaRepository<Emprestimo, EmprestimoId> {
-    // Você pode adicionar métodos de consulta personalizados aqui, se necessário.
-    // Exemplo: List<Emprestimo> findByIdPessoa(Long idPessoa);
-    // Exemplo: List<Emprestimo> findByLivroIdLivro(Long idLivro); // Para buscar por idLivro do livro na relação
-    // Ou para verificar se um empréstimo específico existe e não foi devolvido
-    // Optional<Emprestimo> findByIdLivroAndIdPessoaAndDataDevolucaoRealIsNull(Long idLivro, Long idPessoa);
+
+    // ✅ Correto: acessa os atributos da chave composta (EmprestimoId)
+    Optional<Emprestimo> findById_IdLivroAndId_IdPessoa(Long idLivro, Long idPessoa);
+
+    // Continuação do método de verificação de empréstimo ativo
+    @Query("SELECT e FROM Emprestimo e WHERE e.id.idLivro = :idLivro AND e.dataDevolucaoReal IS NULL")
+    Optional<Emprestimo> findEmprestimoAtivoByLivroId(Long idLivro);
 }

@@ -1,16 +1,16 @@
 package com.br.emakers.apiProjeto.controller;
 
-import java.util.List; // Importe a DTO
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping; // Para status HTTP específicos
+import org.springframework.web.bind.annotation.GetMapping; // Manter este import
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMapping; // Manter este import se você usar Optional em algum lugar
 import org.springframework.web.bind.annotation.RestController;
 
 import com.br.emakers.apiProjeto.controller.request.EmprestimoRequest;
@@ -20,7 +20,7 @@ import com.br.emakers.apiProjeto.service.EmprestimoService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/emprestimos") // Mapeamento para /emprestimos
+@RequestMapping("/emprestimos")
 public class EmprestimoController {
 
     private final EmprestimoService emprestimoService;
@@ -29,61 +29,44 @@ public class EmprestimoController {
         this.emprestimoService = emprestimoService;
     }
 
-    // Endpoint para listar todos os empréstimos
     @GetMapping
     public List<Emprestimo> listarTodos() {
         return emprestimoService.listarTodos();
     }
 
-    // Endpoint para buscar um empréstimo específico por ID do Livro e ID da Pessoa
+    // MÉTODO MODIFICADO: buscarPorId
     @GetMapping("/{idLivro}/{idPessoa}")
     public ResponseEntity<Emprestimo> buscarPorId(@PathVariable Long idLivro, @PathVariable Long idPessoa) {
-        return emprestimoService.buscarPorId(idLivro, idPessoa)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        // O service agora retorna Optional, então fazemos o orElseThrow aqui.
+        // A exceção ResourceNotFoundException será capturada pelo GlobalExceptionHandler.
+        Emprestimo emprestimo = emprestimoService.buscarPorId(idLivro, idPessoa)
+                                            .orElseThrow(() -> new com.br.emakers.apiProjeto.exception.ResourceNotFoundException(
+                                                "Empréstimo não encontrado para Livro ID: " + idLivro + " e Pessoa ID: " + idPessoa));
+        return ResponseEntity.ok(emprestimo);
     }
 
-    // Endpoint para realizar um novo empréstimo
+    // MÉTODO MODIFICADO: realizarEmprestimo (removido try-catch)
     @PostMapping
-    public ResponseEntity<?> realizarEmprestimo(@Valid @RequestBody EmprestimoRequest request) {
-        try {
-            Emprestimo novoEmprestimo = emprestimoService.realizarEmprestimo(
-                    request.getIdLivro(),
-                    request.getIdPessoa(),
-                    request.getDataDevolucaoPrevista()
-            );
-            return ResponseEntity.status(HttpStatus.CREATED).body(novoEmprestimo); // Retorna 201 Created
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage()); // Ex: Livro/Pessoa não encontrados, livro já emprestado
-        }
+    public ResponseEntity<Emprestimo> realizarEmprestimo(@Valid @RequestBody EmprestimoRequest request) {
+        Emprestimo novoEmprestimo = emprestimoService.realizarEmprestimo(
+                request.getIdLivro(),
+                request.getIdPessoa(),
+                request.getDataDevolucaoPrevista()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoEmprestimo); // Retorna 201 Created
     }
 
-    // Endpoint para realizar a devolução de um livro
-    @PutMapping("/{idLivro}/{idPessoa}/devolver") // PUT para devolução
-    public ResponseEntity<?> realizarDevolucao(@PathVariable Long idLivro, @PathVariable Long idPessoa) {
-        try {
-            Emprestimo emprestimoDevolvido = emprestimoService.realizarDevolucao(idLivro, idPessoa);
-            return ResponseEntity.ok(emprestimoDevolvido);
-        } catch (RuntimeException e) {
-            // Pode ser 404 Not Found se o empréstimo não existir
-            // Ou 400 Bad Request se o livro já foi devolvido
-            if (e.getMessage().contains("não encontrado")) {
-                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            } else {
-                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            }
-        }
+    // MÉTODO MODIFICADO: realizarDevolucao (removido try-catch)
+    @PutMapping("/{idLivro}/{idPessoa}/devolver")
+    public ResponseEntity<Emprestimo> realizarDevolucao(@PathVariable Long idLivro, @PathVariable Long idPessoa) {
+        Emprestimo emprestimoDevolvido = emprestimoService.realizarDevolucao(idLivro, idPessoa);
+        return ResponseEntity.ok(emprestimoDevolvido);
     }
 
-    // Endpoint para deletar um registro de empréstimo (cuidado ao usar, é mais para limpeza)
+    // MÉTODO MODIFICADO: deletarEmprestimo (removido try-catch)
     @DeleteMapping("/{idLivro}/{idPessoa}")
     public ResponseEntity<Void> deletarEmprestimo(@PathVariable Long idLivro, @PathVariable Long idPessoa) {
-        try {
-            emprestimoService.deletarEmprestimo(idLivro, idPessoa);
-            return ResponseEntity.noContent().build(); // 204 No Content
-        } catch (Exception e) {
-            // Idealmente, um tratamento de exceção mais específico
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        emprestimoService.deletarEmprestimo(idLivro, idPessoa);
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 }

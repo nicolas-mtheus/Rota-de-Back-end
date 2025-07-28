@@ -32,11 +32,12 @@ public class PessoaController {
         return pessoaService.listarTodos();
     }
 
+    // MÉTODO MODIFICADO: buscarPorId
     @GetMapping("/{id}")
     public ResponseEntity<Pessoa> buscarPorId(@PathVariable Long id) {
-        return pessoaService.buscarPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        // O service agora retorna a Pessoa diretamente ou lança ResourceNotFoundException
+        Pessoa pessoa = pessoaService.buscarPorId(id);
+        return ResponseEntity.ok(pessoa);
     }
 
     @PostMapping
@@ -44,32 +45,32 @@ public class PessoaController {
         return ResponseEntity.ok(pessoaService.salvar(pessoa));
     }
 
-     // NOVO MÉTODO: ATUALIZAR PESSOA (PUT)
+    // MÉTODO MODIFICADO: atualizar
     @PutMapping("/{id}")
     public ResponseEntity<Pessoa> atualizar(@PathVariable Long id, @Valid @RequestBody Pessoa pessoa) {
-        return pessoaService.buscarPorId(id)
-                .map(pessoaExistente -> {
-                    // Atualiza os campos da pessoa existente com os dados recebidos
-                    pessoaExistente.setNome(pessoa.getNome());
-                    pessoaExistente.setCpf(pessoa.getCpf());
-                    pessoaExistente.setCep(pessoa.getCep());
-                    pessoaExistente.setEmail(pessoa.getEmail());
+        // O service.buscarPorId agora lança ResourceNotFoundException se não encontrar
+        // Então, se chegar aqui, a pessoa existe.
+        Pessoa pessoaExistente = pessoaService.buscarPorId(id); // Garante que a pessoa existe
 
-                    // Atualiza a senha APENAS se uma nova senha for fornecida no request
-                    // (o PessoaService já cuida da criptografia ao chamar salvar)
-                    if (pessoa.getSenha() != null && !pessoa.getSenha().isEmpty()) {
-                        pessoaExistente.setSenha(pessoa.getSenha());
-                    }
+        // Atualiza os campos da pessoa existente com os dados recebidos
+        pessoaExistente.setNome(pessoa.getNome());
+        pessoaExistente.setCpf(pessoa.getCpf());
+        pessoaExistente.setCep(pessoa.getCep());
+        pessoaExistente.setEmail(pessoa.getEmail());
 
-                    return ResponseEntity.ok(pessoaService.salvar(pessoaExistente));
-                })
-                .orElse(ResponseEntity.notFound().build());
+        // Atualiza a senha APENAS se uma nova senha for fornecida no request
+        if (pessoa.getSenha() != null && !pessoa.getSenha().isEmpty()) {
+            pessoaExistente.setSenha(pessoa.getSenha());
+        }
+
+        return ResponseEntity.ok(pessoaService.salvar(pessoaExistente));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        // O service.deletar agora lança ResourceNotFoundException se não encontrar
+        // Não precisamos mais do Optional.
         pessoaService.deletar(id);
         return ResponseEntity.noContent().build();
     }
 }
-
