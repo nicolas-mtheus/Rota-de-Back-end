@@ -2,15 +2,16 @@ package com.br.emakers.apiProjeto.exception;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.Map; // Para tratar erros de validação @Valid
+import java.util.Map;
 
-import org.springframework.http.HttpStatus; // Para tratamento global
-import org.springframework.http.ResponseEntity; // Para mapear exceções a métodos
-import org.springframework.web.bind.MethodArgumentNotValidException; // Combina @ControllerAdvice e @ResponseBody
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.annotation.RestControllerAdvice; // <-- IMPORT NECESSÁRIO PARA @RestControllerAdvice
 
-@RestControllerAdvice // Combina @ControllerAdvice e @ResponseBody, para que a resposta seja JSON
+
+@RestControllerAdvice(basePackages = "com.br.emakers.apiProjeto.controller")
 public class GlobalExceptionHandler {
 
     // Manipula exceções de Recurso Não Encontrado (404 Not Found)
