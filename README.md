@@ -167,8 +167,6 @@ DELETE /pessoas/{id}: Deletar pessoa (AUTENTICADO - Basic Auth)
 🧑‍💻 Autor
 Nicolas Matheus Lima Oliveira
 
-Seu perfil no GitHub
-
 [Linkedin : (https://www.linkedin.com/in/nicolas-matheus-36a444276)]
 
 📄 Licença
